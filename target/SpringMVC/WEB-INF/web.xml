@@ -1,0 +1,29 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+    <!-- 全局初始化参数 -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <!-- 自己写的不需要写classpath -->
+<!--        <param-value>applicationContext.xml</param-value>-->
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+    <!-- 监听器配置ContextLoaderListener,监听web应用的启动 -->
+    <listener>
+        <!-- 这是手动写的 -->
+<!--        <listener-class>com.example.listener.ContextLoaderListener</listener-class>-->
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>UserServlet</servlet-name>
+        <servlet-class>com.example.web.UserServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/userServlet</url-pattern>
+    </servlet-mapping>
+</web-app>

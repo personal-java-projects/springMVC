@@ -1,0 +1,5 @@
+## Spring集成Web环境
+#### 1、ApplicationContext应用上下文获取方式
+应用上下文是通过new ClassPathXmlApplicationContext(配置文件)的方式获取的，但是每次从容器中获取Bean的时候都需要编写new ClassPathXmlApplicationContext(配置文件)，这样的弊端是配置文件加载多次，应用上下文对象创建多次。
+
+在web项目中，可以使用ServletContextListener监听web应用的启动，我们可以在web应用启动时，就加载spring的配置文件，创建应用上下文对象ApplicationContext,再将其存储到最大的域servletContext域中，这样就可以在任意位置从域中获得应用上下文ApplicationContext对象了。
