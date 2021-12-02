@@ -2,7 +2,29 @@
  "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
  "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
-<web-app>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         version="2.5"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <!-- 配置springmvc的前端控制器 -->
+    <servlet>
+        <servlet-name>DispatcherServlet</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <!-- servlet初始化的参数 -->
+        <!-- 这里初始化加载spring-mvc.xml配置文件 -->
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:spring-mvc.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DispatcherServlet</servlet-name>
+        <!-- /是缺省的意思，表示任何请求都会走该servlet -->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+    
     <!-- 全局初始化参数 -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
@@ -10,6 +32,7 @@
 <!--        <param-value>applicationContext.xml</param-value>-->
         <param-value>classpath:applicationContext.xml</param-value>
     </context-param>
+
     <!-- 监听器配置ContextLoaderListener,监听web应用的启动 -->
     <listener>
         <!-- 这是手动写的 -->
