@@ -6,16 +6,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -150,5 +151,79 @@ public class UserController {
     @ResponseBody
     public void save14(@RequestBody List<User> userList) throws IOException {
         System.out.println(userList);
+    }
+
+    @RequestMapping("/quick15")
+    @ResponseBody
+    public void save16(@RequestParam(value = "name", required=false, defaultValue="鹅城警官") String username) {
+        System.out.println(username);
+    }
+
+    @RequestMapping(value = "/quick16/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public void save17(@PathVariable(value = "name", required = true) String username) {
+        System.out.println(username);
+    }
+
+    @RequestMapping(value = "/quick17")
+    @ResponseBody
+    public void save18(Date date) {
+        System.out.println(date);
+    }
+
+    @RequestMapping(value = "/quick18")
+    @ResponseBody
+    public void save19(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+        System.out.println(request);
+        System.out.println(response);
+        System.out.println(session);
+    }
+
+    @RequestMapping(value = "/quick19")
+    @ResponseBody
+    public void save20(@RequestHeader(value = "User-Agent", required = false) String headerValue) {
+        System.out.println(headerValue);
+    }
+
+    @RequestMapping(value = "/quick20")
+    @ResponseBody
+    public void save21(@CookieValue(value = "JSESSIONID", required = false) String cookie) {
+        System.out.println(cookie);
+    }
+
+    @RequestMapping(value = "/upload")
+    @ResponseBody
+    public void upload(String name, MultipartFile uploadFile) throws IOException {
+        System.out.println(name);
+        System.out.println(uploadFile);
+        // 获得文件名称
+        String originalFilename = uploadFile.getOriginalFilename();
+        // 保存文件, 我已经在d盘根目录新建upload文件夹
+        uploadFile.transferTo(new File("d:\\upload\\"+originalFilename));
+    }
+
+    @RequestMapping(value = "/upload2")
+    @ResponseBody
+    public void upload(String name, MultipartFile uploadFile, MultipartFile uploadFile2) throws IOException {
+        // 获得文件名称
+        String originalFilename = uploadFile.getOriginalFilename();
+        // 保存文件
+        uploadFile.transferTo(new File("d:\\upload\\"+originalFilename));
+
+        // 获得文件名称
+        String originalFilename2 = uploadFile2.getOriginalFilename();
+        // 保存文件
+        uploadFile2.transferTo(new File("d:\\upload\\"+originalFilename2));
+    }
+
+    @RequestMapping(value = "/uploadFiles")
+    @ResponseBody
+    public void upload(String name, MultipartFile[] uploadFiles) throws IOException {
+        for (MultipartFile uploadFile : uploadFiles) {
+            // 获得文件名称
+            String originalFilename = uploadFile.getOriginalFilename();
+            // 保存文件, 我已经在d盘根目录新建upload文件夹
+            uploadFile.transferTo(new File("d:\\upload\\"+originalFilename));
+        }
     }
 }

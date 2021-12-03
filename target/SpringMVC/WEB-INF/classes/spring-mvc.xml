@@ -20,6 +20,16 @@
         <property name="suffix" value=".jsp"></property>
     </bean>
 
+    <!-- 配置上传文件解析器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 上传文件总大小 -->
+        <property name="maxUploadSize" value="5242800"></property>
+        <!-- 上传单个文件的大小 -->
+        <property name="maxUploadSizePerFile" value="5242800"></property>
+        <!-- 上传文件的编码类型 -->
+        <property name="defaultEncoding" value="UTF-8"></property>
+    </bean>
+
     <!-- 配置处理器适配器, 使得方法返回的对象或集合能通过jackson自动转换成json格式的字符串 -->
 <!--    <bean id="requestMappingHandlerAdapter" class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">-->
 <!--        <property name="messageConverters">-->
@@ -29,7 +39,21 @@
 <!--        </property>-->
 <!--    </bean>-->
     <!-- mvc的注解驱动 -->
-    <mvc:annotation-driven />
-    
-    <mvc:resources mapping="/js/**" location="/js/" />
+    <mvc:annotation-driven conversion-service="conversionService" />
+
+    <!-- 开放资源的访问 -->
+<!--    <mvc:resources mapping="/js/**" location="/js/" />-->
+<!--    <mvc:resources mapping="/img/**" location="/img/" />-->
+
+    <!-- 交由tomcat去访问静态资源 -->
+    <mvc:default-servlet-handler />
+
+    <!-- 声明Date转换器 -->
+    <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+        <property name="converters">
+            <list>
+                <bean class="com.example.converter.DateConverter"></bean>
+            </list>
+        </property>
+    </bean>
 </beans>
