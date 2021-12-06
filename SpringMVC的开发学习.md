@@ -330,3 +330,456 @@ public void save14(@RequestBody List<User> userList) throws IOException {
 </script>
 ```
 
+#### 6、请求数据乱码问题
+
+当post请求时，数据会出现乱码，我们可以设置一个过滤器来进行编码过滤。
+
+```xml
+<filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>UTF-8</param-value>
+    </init-param>
+</filter>
+<filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+```
+
+#### 7、参数绑定注解@RequestParam
+
+当请求的参数名称和Controller的业务方法参数名称不一致时，就需要通过@RequestParam注解显式的绑定。
+
+```javascript
+<form action="${pageContext.request.contextPath}/user/quick15" method="post">
+    <input type="text" name="name"><br />
+    <button type="submit">提交</button>
+</form>
+```
+
+```java
+@RequestMapping("/quick15")
+@ResponseBody
+public void save16(@RequestParam(value = "name") String username) {
+    System.out.println(username);
+}
+```
+
+```apl
+http://localhost:8080/SpringMVC_war_exploded/user/quick15?name=猎人吗
+```
+
+注解@RequestParam还有如下参数可以使用：
+
+* value: 请求参数名称
+* required: 在指定的请求参数是否必须包括，默认是true，提交时如果没有对应的参数则会报错。
+* defaultValue: 当没有指定请求参数时，则使用指定的默认值赋值
+
+```java
+@RequestMapping("/quick15")
+@ResponseBody
+public void save16(@RequestParam(value = "name", required=false, defaultValue="鹅城警官") String username) {
+    System.out.println(username);
+}
+```
+
+#### 8、获得Restful风格的参数
+
+restful是一种软件架构风格、设计风格，而不是标准，只是提供了一组设计原则和约束条件。它主要用于客户端和服务器交互类的软件。基于这个风格设计的软件可以更简洁，更有层次，更易于实现缓存等机制。
+
+Restful风格的请求是使用"url+请求方式"表示一次请求的目的的，HTTP协议里的四个表示操作方式的动词如下：
+
+* GET：用于获取资源
+* POST：用于新建资源
+* PUT：用于更新资源
+* DELETE：用于删除资源
+
+例如：
+
+* /user/1 GET：得到id=1的user
+* /user/1 DELETE：删除id=1的user
+* /user/1 PUT：更新id=1的user
+* /user POST：新增user
+
+上述url地址/user/1中的1就是要获得的请求参数，在springMVC中可以使用占位符进行参数绑定。地址`/user/1`可以写成`/user/{id}`，占位符{id}对应的就是1的值。在业务方法中我们可以使用`@PathVariable`注解进行占位符的匹配获取工作。
+
+```apl
+http://localhost:8080/SpringMVC_war_exploded/user/quick15/{张三}
+```
+
+```java
+@RequestMapping("/quick16/{name}")
+@ResponseBody
+public void save17(@PathVariable(value = "name", required = true) String username) {
+    System.out.println(username);
+}
+```
+
+#### 9、自定义类型转换器
+
+* SpringMVC默认已经提供了一些常用的类型转换器，例如客户端提交的字符串转换成int型进行参数设置。
+* 但是不是所有的数据类型都提供了转换器，没有提供的就需要自定义转换器，例如：日期类型的数据就需要自定义转换器。
+
+自定义类型转换器的开发步骤：
+
+1. 定义转换器类实现Converter接口
+2. 在spring-mvc.xml配置文件中声明转换器 
+3. 在<annotation-driven>中引用转换器
+
+```java
+public class DateConverter implements Converter<String, Date> {
+    @Override
+    public Date convert(String dateStr) {
+        // 将日期字符串转换成真正的日期对象
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = null;
+
+        try {
+            date = simpleDateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return date;
+    }
+}
+```
+
+```xml
+<!-- mvc的注解驱动 -->
+<mvc:annotation-driven conversion-service="conversionService" />
+
+<!-- 声明Date转换器 -->
+<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+    <property name="converters">
+        <list>
+            <bean class="com.example.converter.DateConverter"></bean>
+        </list>
+    </property>
+</bean>
+
+```
+
+#### 10、获得Servlet相关API
+
+springMVC支持使用原始ServletAPI对象作为控制器方法的参数进行注入，常用的对象如下：
+
+* HttpServletRequest
+* HttpServletResponse
+* HttpSession
+
+```java
+@RequestMapping(value = "/quick18")
+@ResponseBody
+public void save19(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+   System.out.println(request);
+   System.out.println(response);
+   System.out.println(session);
+}
+```
+
+#### 11、获取请求头
+
+1. **@RequestHeader**
+
+   使用**@RequestHeader**可以获得请求头信息，相当于web阶段学习的request.getHeader(name)
+
+   @RequestHeader注解的属性如下：
+
+   * value：请求头的名称
+   * required：是否必须携带此请求头
+
+   ```java
+   @RequestMapping(value = "/quick19")
+   @ResponseBody
+   public void save20(@RequestHeader(value = "User-Agent", required = false) String headerValue) {
+       System.out.println(headerValue);
+   }
+   ```
+
+2. **@CookieValue**
+
+   使用**@CookieValue**可以获得指定cookie的值。
+
+   @CookieValue注解的属性如下：
+
+   * value：指定cookie的名称
+   * required：是否必须携带此cookie
+
+   ```java
+   Cookie: JSESSIONID=13F1A3B1FF678E3CC6D84D9EBB5D2864
+   ```
+
+   ```java
+   @RequestMapping(value = "/quick20")
+   @ResponseBody
+   public void save21(@CookieValue(value = "JSESSIONID", required = false) String cookie) {
+       System.out.println(cookie);
+   }
+   ```
+
+#### 12、文件上传
+
+1. **文件上传客户端三要素**
+
+   * 表单项type="file"
+   * 表单的提交方式是post
+   * 表单的enctype属性是多部分表单形式，及enctype="multipart/form-data"
+
+2. **文件上传原理**
+
+   * 当form表单修改为多部分表单时，request.getParameter()将失效。
+
+   * enctype="application/x-www-form-urlencoded"时，form表单的正文内容格式是：
+
+     **key=value&key=value&key=value**
+
+   * 当form表单的enctype取值为multipart/form-data时，请求正文内容就变成多部分形式：
+
+     ```html
+     <FORM method="POST" action="http://w.sohu.com/t2/upload.do" enctype="multipart/form-data">
+     <INPUT type="text" name="city" value="Santa colo">
+     <INPUT type="text" name="desc">
+     <INPUT type="file" name="pic">
+     </FORM>
+     ```
+
+     ```kotlin
+     POST /t2/upload.do HTTP/1.1
+     User-Agent: SOHUWapRebot
+     Accept-Language: zh-cn,zh;q=0.5
+     Accept-Charset: GBK,utf-8;q=0.7,*;q=0.7
+     Connection: keep-alive
+     Content-Length: 60408
+     Content-Type:multipart/form-data; boundary=ZnGpDtePMx0KrHh_G0X99Yef9r8JZsRJSXC
+     Host: w.sohu.com
+     
+     --ZnGpDtePMx0KrHh_G0X99Yef9r8JZsRJSXC
+     Content-Disposition: form-data; name="city"
+     
+     Santa colo
+     --ZnGpDtePMx0KrHh_G0X99Yef9r8JZsRJSXC
+     Content-Disposition: form-data;name="desc"
+     Content-Type: text/plain; charset=UTF-8
+     Content-Transfer-Encoding: 8bit
+      
+     ...
+     --ZnGpDtePMx0KrHh_G0X99Yef9r8JZsRJSXC
+     Content-Disposition: form-data;name="pic"; filename="photo.jpg"
+     Content-Type: application/octet-stream
+     Content-Transfer-Encoding: binary
+      
+     ... binary data of the jpg ...
+     --ZnGpDtePMx0KrHh_G0X99Yef9r8JZsRJSXC--
+     ```
+
+#### 13、单文件上传的步骤
+
+1. 导入fileupload和io依赖
+
+   ```xml
+   <dependency>
+     <groupId>commons-fileupload</groupId>
+     <artifactId>commons-fileupload</artifactId>
+     <version>1.2.2</version>
+   </dependency>
+   <dependency>
+     <groupId>commons-io</groupId>
+     <artifactId>commons-io</artifactId>
+     <version>2.4</version>
+   </dependency>
+   ```
+
+2. 配置文件上传解析器
+
+   ```xml
+   <!-- 配置上传文件解析器 -->
+   <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+       <!-- 上传文件总大小 -->
+       <property name="maxUploadSize" value="5242800"></property>
+       <!-- 上传单个文件的大小 -->
+       <property name="maxUploadSizePerFile" value="5242800"></property>
+       <!-- 上传文件的编码类型 -->
+       <property name="defaultEncoding" value="UTF-8"></property>
+   </bean>
+   ```
+
+3. 编写文件上传代码
+
+   ```java
+   @RequestMapping(value = "/upload")
+   @ResponseBody
+   public void upload(String name, MultipartFile uploadFile, MultipartFile uploadFile2) throws IOException {
+       // 获得文件名称
+       String originalFilename = uploadFile.getOriginalFilename();
+       // 保存文件
+       uploadFile.transferTo(new File("c:\\upload\\"+originalFilename));
+       
+       // 获得文件名称
+       String originalFilename2 = uploadFile2.getOriginalFilename();
+       // 保存文件
+       uploadFile2.transferTo(new File("c:\\upload\\"+originalFilename2));
+   }
+   ```
+
+```jsp
+<form action="${pageContext.servletContext.contextPath}/user/upload" method="post" enctype="multipart/form-data">
+    名称：<input type="text" name="name"><br />
+    文件：<input type="file" name="uploadFile"><br />
+    文件2：<input type="file" name="uploadFile2"><br />
+    <button type="submit">提交</button>
+</form>
+```
+
+#### 14、多文件上传
+
+多文件上传，只需要将页面改成多个文件上传项，将方法参数MultipartFile类型改成MultipartFile[]即可。
+
+```
+<form action="${pageContext.servletContext.contextPath}/user/uploadFiles" method="post" enctype="multipart/form-data">
+    名称：<input type="text" name="name"><br />
+    文件1：<input type="file" name="uploadFiles"><br />
+    文件2：<input type="file" name="uploadFiles"><br />
+    文件3：<input type="file" name="uploadFiles"><br />
+    <button type="submit">提交</button>
+</form>
+```
+
+```java
+@RequestMapping(value = "/uploadFiles")
+@ResponseBody
+public void upload(String name, MultipartFile[] uploadFiles) throws IOException {
+    for (MultipartFile uploadFile : uploadFiles) {
+        // 获得文件名称
+        String originalFilename = uploadFile.getOriginalFilename();
+        // 保存文件, 我已经在d盘根目录新建upload文件夹
+        uploadFile.transferTo(new File("d:\\upload\\"+originalFilename));
+    }
+}
+```
+
+## Spring JdbcTemplate基本使用
+
+#### 1、JdbcTemplate概述
+
+它是spring框架中提供的一个对象，是对原始繁琐的Jdbc API对象的简单封装。spring框架为我们提供了很多的操作模板类。例如：操作关系型数据的JdbcTemplate和HibernateTemplate，操作nosql数据库的RedisTemplate，操作消息队列的JmsTemplate等等。
+
+#### 2、JdbcTemplate的开发步骤
+
+1. 导入spring-jdbc和spring-tx(事务)依赖
+2. 创建数据库表和实体
+3. 创建JdbcTemplate对象
+4. 执行数据库操作
+
+```java
+// 创建数据源对象
+ComboPooledDataSource dataSource = new ComboPooledDataSource();
+dataSource.setDriverClass("com.mysql.jdbc.Driver");
+dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/test");
+dataSource.setUser("root");
+dataSource.setPassword("root");
+
+JdbcTemplate jdbcTemplate = new JdbcTemplate();
+
+// 设置数据源对象，知道数据库在哪儿
+jdbcTemplate.setDataSource(dataSource);
+
+// 执行操作
+int row = jdbcTemplate.update("insert into account values(?, ?)", "tom", 29.22);
+```
+
+#### 3、Spring产生JdbcTemplate对象
+
+我们可以将JdbcTemplate对象的创建权交给Spring，将数据源DataSource的创建权也交给Spring，在Spring容器内部将数据源DataSource注入到JdbcTemplate模板对象中，配置如下：
+
+```xml
+<!-- 创建c3p0 数据源对象 -->
+<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+    <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test"></property>
+    <property name="user" value="root"></property>
+    <property name="password" value="root"></property>
+</bean>
+
+<!-- 创建JdbcTemplate对象，注入c3p0 -->
+<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+    <property name="dataSource" ref="dataSource"></property>
+</bean>
+```
+
+#### 4、JdbcTemplate的常用操作
+
+1. 修改操作
+
+   ```java
+   @RunWith(SpringJUnit4ClassRunner.class)
+   @ContextConfiguration("classpath:applicationContext.xml")
+   // SpringConfiguration配置类的形式配置Spring容器
+   public class JdbcTemplateCRUDTest {
+   
+       @Autowired
+       private JdbcTemplate jdbcTemplate;
+   
+       @Test
+       public void testUpdate() {
+       	jdbcTemplate.update("update account set money=?where name=?", 1000, "tom")
+       }
+   }
+   ```
+
+2. 删除操作
+
+   ```java
+   @Test
+       public void testDelete() {
+           // double类型的必须指定和数据库中小数点位数一样的小数
+           jdbcTemplate.update("delete from account where name=?", "tom");
+       }
+   ```
+
+3. 单个查询操作
+
+   ```java
+   @Test
+   public void testQueryOne() {
+       try {
+           Account account = jdbcTemplate.queryForObject("select * from account where name=?", new BeanPropertyRowMapper<Account>(Account.class), "zhangsan");
+   
+           System.out.println(account);
+       } catch (Exception e) {
+           System.out.println(e);
+       }
+   }
+   ```
+
+4. 批量查询操作
+
+   ```java
+   @Test
+   public void testQueryAll() {
+       List<Account> accountList = jdbcTemplate.query("select * from account", new BeanPropertyRowMapper<Account>(Account.class));
+   
+       System.out.println(accountList);
+   }@Test
+   public void testQueryAll() {
+       List<Account> accountList = jdbcTemplate.query("select * from account", new BeanPropertyRowMapper<Account>(Account.class));
+   
+       System.out.println(accountList);
+   }
+   ```
+
+5. 查询总数操作
+
+   ```java
+   @Test
+   public void testQueryCount() {
+      Long count = jdbcTemplate.queryForObject("select count(*) from account", Long.class);
+   
+       System.out.println(count);
+   }
+   ```
+
+   
