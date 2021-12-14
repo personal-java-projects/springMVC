@@ -1,2 +1,2 @@
-# springMVC-study
+# springMVC
 个人学习springMVC
